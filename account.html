@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#101211">
+	<meta name="description" content="Crée, connecte-toi et gère ton compte AFTERLIGHT. Démonstration locale au navigateur.">
+	<title>Compte AFTERLIGHT — Afterlight</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Italiana&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="pages.css">
+	<script src="app.js" defer></script>
+</head>
+<body>
+	<a class="skip-link" href="#contenu">Aller au contenu</a>
+	<header class="site-header">
+		<a class="wordmark" href="index.html"><span class="wordmark-mark" aria-hidden="true"></span> AFTERLIGHT</a>
+		<nav class="site-nav" aria-label="Navigation principale">
+			<a href="index.html">Accueil</a><a href="releases.html">Releases</a><a href="forum.html">Forum</a><a href="lore.html">Lore</a><a href="download.html">Télécharger</a><a href="account.html" aria-current="page">Compte</a>
+		</nav>
+	</header>
+	<main class="page-main" id="contenu">
+		<p class="eyebrow">Espace AFTERLIGHT</p>
+		<h1>Ton compte,<br>ton passage.</h1>
+		<p class="lede">Crée ton profil, connecte-toi et retrouve les discussions du forum.</p>
+		<div class="notice"><strong>Prototype local, pas un vrai service de compte :</strong> les données restent dans ce navigateur et ne sont pas synchronisées. N'utilise pas un mot de passe important ou réutilisé. Il n'existe actuellement ni serveur de compte ni récupération de mot de passe.</div>
+		<section id="account-state" class="account-state" aria-live="polite"></section>
+		<div class="account-tabs" aria-label="Actions du compte">
+			<button type="button" data-account-tab="signup" aria-pressed="true">Créer un compte</button>
+			<button type="button" data-account-tab="login" aria-pressed="false">Se connecter</button>
+		</div>
+		<div class="form-layout">
+			<form id="signup-form" class="form-panel account-form">
+				<h2>Créer un profil</h2>
+				<p>Une démo pour tester le parcours du compte AFTERLIGHT.</p>
+				<label class="form-field">Nom affiché<input name="name" maxlength="32" autocomplete="nickname" required></label>
+				<label class="form-field">Adresse e-mail<input name="email" type="email" autocomplete="email" required></label>
+				<label class="form-field">Mot de passe<input name="password" type="password" minlength="8" autocomplete="new-password" required></label>
+				<button type="submit">Créer mon profil</button>
+			</form>
+			<form id="login-form" class="form-panel account-form" hidden>
+				<h2>Se connecter</h2>
+				<p>Utilise les identifiants enregistrés sur ce navigateur.</p>
+				<label class="form-field">Adresse e-mail<input name="email" type="email" autocomplete="email" required></label>
+				<label class="form-field">Mot de passe<input name="password" type="password" autocomplete="current-password" required></label>
+				<button type="submit">Se connecter</button>
+			</form>
+			<aside class="form-panel">
+				<h2>Gérer le compte</h2>
+				<p>Une fois connecté·e, tu peux modifier ton nom affiché ou te déconnecter depuis le panneau ci-contre.</p>
+				<p class="muted">Le forum de démonstration utilise ce profil local pour associer les sujets à ton nom.</p>
+				<a class="button-link" href="forum.html">Aller au forum →</a>
+			</aside>
+		</div>
+		<p id="account-message" class="form-message" role="status" aria-live="polite"></p>
+	</main>
+	<footer class="page-footer"><span>Compte AFTERLIGHT · Version de démonstration</span><a href="forum.html">Rejoindre le forum →</a></footer>
+</body>
+</html>
