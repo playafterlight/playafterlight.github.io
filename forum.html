@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#101211">
+	<meta name="description" content="Discutez d'Afterlight avec la communauté. Le forum est une démonstration locale réservée aux comptes Afterlight.">
+	<title>Forum — Afterlight</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Italiana&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="pages.css">
+	<script src="app.js" defer></script>
+</head>
+<body>
+	<a class="skip-link" href="#contenu">Aller au contenu</a>
+	<header class="site-header">
+		<a class="wordmark" href="index.html"><span class="wordmark-mark" aria-hidden="true"></span> AFTERLIGHT</a>
+		<nav class="site-nav" aria-label="Navigation principale">
+			<a href="index.html">Accueil</a><a href="releases.html">Releases</a><a href="forum.html" aria-current="page">Forum</a><a href="lore.html">Lore</a><a href="download.html">Télécharger</a><a href="account.html">Compte</a>
+		</nav>
+	</header>
+	<main class="page-main" id="contenu">
+		<p class="eyebrow">Rencontre communautaire</p>
+		<h1>La parole<br>est à vous.</h1>
+		<p class="lede">Partage tes idées, tes questions et tes théories autour d'Afterlight. La publication est réservée aux personnes connectées.</p>
+		<div class="notice"><strong>Forum de démonstration :</strong> les discussions sont enregistrées uniquement dans le stockage local de ton navigateur. Elles ne sont ni envoyées à un serveur ni visibles par les autres visiteurs.</div>
+		<section id="forum-login-notice" class="account-state" hidden>
+			<h2>Un compte AFTERLIGHT est nécessaire</h2>
+			<p class="muted">Connecte-toi ou crée un profil de démonstration pour écrire un sujet.</p>
+			<a class="button-link" href="account.html">Accéder à mon compte →</a>
+		</section>
+		<form id="forum-form" class="form-panel" hidden>
+			<p id="forum-author" class="status"></p>
+			<h2>Ouvrir une discussion</h2>
+			<label class="form-field">Titre du sujet<input name="title" maxlength="100" required placeholder="De quoi veux-tu parler ?"></label>
+			<label class="form-field">Message<textarea name="content" maxlength="3000" required placeholder="Écris ton message…"></textarea></label>
+			<button type="submit">Publier le sujet</button>
+			<p id="forum-message" class="form-message" role="status" aria-live="polite"></p>
+		</form>
+		<section aria-labelledby="discussions-titre">
+			<h2 id="discussions-titre" class="section-heading">Discussions</h2>
+			<div id="forum-list" class="forum-list" aria-live="polite"></div>
+		</section>
+	</main>
+	<footer class="page-footer"><span>Respect et bienveillance dans chaque échange.</span><a href="account.html">Compte AFTERLIGHT →</a></footer>
+</body>
+</html>
