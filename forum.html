@@ -4,12 +4,14 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="theme-color" content="#101211">
-	<meta name="description" content="Discutez d'Afterlight avec la communauté. Le forum est une démonstration locale réservée aux comptes Afterlight.">
+	<meta name="description" content="Lisez les discussions publiques autour d'Afterlight et échangez avec la communauté.">
 	<title>Forum — Afterlight</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Italiana&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="pages.css">
+	<script src="supabase-config.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 	<script src="app.js" defer></script>
 </head>
 <body>
@@ -23,11 +25,12 @@
 	<main class="page-main" id="contenu">
 		<p class="eyebrow">Rencontre communautaire</p>
 		<h1>La parole<br>est à vous.</h1>
-		<p class="lede">Partage tes idées, tes questions et tes théories autour d'Afterlight. La publication est réservée aux personnes connectées.</p>
-		<div class="notice"><strong>Forum de démonstration :</strong> les discussions sont enregistrées uniquement dans le stockage local de ton navigateur. Elles ne sont ni envoyées à un serveur ni visibles par les autres visiteurs.</div>
+		<p class="lede">Lis les sujets de la communauté, ouvre une discussion et partage tes idées autour d'Afterlight. La lecture est publique ; la publication et les réponses sont réservées aux personnes connectées.</p>
+		<div class="notice"><strong>Discussions publiques :</strong> les sujets et leurs réponses sont partagés avec tous les visiteurs.</div>
+		<p id="forum-status" class="form-message" role="status" aria-live="polite"></p>
 		<section id="forum-login-notice" class="account-state" hidden>
 			<h2>Un compte AFTERLIGHT est nécessaire</h2>
-			<p class="muted">Connecte-toi ou crée un profil de démonstration pour écrire un sujet.</p>
+			<p class="muted">Connecte-toi ou crée un compte pour écrire un sujet et répondre aux discussions.</p>
 			<a class="button-link" href="account.html">Accéder à mon compte →</a>
 		</section>
 		<form id="forum-form" class="form-panel" hidden>

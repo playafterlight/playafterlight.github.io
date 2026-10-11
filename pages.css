@@ -74,6 +74,14 @@ h3 { font-size: 16px; font-weight: 500; }
 .forum-post h3 { margin-bottom: 8px; }
 .forum-post p { margin-bottom: 12px; color: var(--muted); font-size: 13px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
 .forum-post-meta { margin-bottom: 0; color: var(--ice); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.forum-thread-toggle { min-height: 38px; margin-top: 16px; padding: 0 12px; font-size: 11px; }
+.forum-thread { margin-top: 18px; padding: 20px 0 0 20px; border-top: 1px solid var(--line); border-left: 2px solid rgba(212, 91, 48, .45); }
+.forum-replies { display: grid; gap: 12px; }
+.forum-reply { padding: 16px; border: 1px solid rgba(212, 91, 48, .2); background: rgba(16, 18, 17, .55); }
+.forum-reply p:first-child { margin-bottom: 10px; }
+.forum-reply-form { max-width: 680px; margin-top: 20px; }
+.forum-reply-form .form-field { margin-top: 0; }
+.forum-reply-form textarea { min-height: 95px; }
 .lore-section { max-width: 800px; padding: 30px 0; border-top: 1px solid var(--line); }
 .lore-section p { color: var(--muted); font-size: 14px; line-height: 1.9; }
 

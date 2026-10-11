@@ -1,6 +1,5 @@
 const ACCOUNT_KEY = "afterlight.demo.account";
 const SESSION_KEY = "afterlight.demo.session";
-const POSTS_KEY = "afterlight.demo.posts";
 const supabaseConfig = globalThis.AFTERLIGHT_SUPABASE_CONFIG;
 const supabaseUrlIsValid = (() => {
 	try {
@@ -224,20 +223,12 @@ function initializeForum() {
 	const list = document.querySelector("#forum-list");
 	if (!list) return;
 
-	const loginNotice = document.querySelector("#forum-login-notice");
 	const form = document.querySelector("#forum-form");
-	const account = getSession();
-	if (!account) {
-		loginNotice.hidden = false;
-		form.hidden = true;
-	} else {
-		loginNotice.hidden = true;
-		form.hidden = false;
-		document.querySelector("#forum-author").textContent = `Connecté·e en tant que ${account.name}`;
-	}
+	const status = document.querySelector("#forum-status");
+	const accountNotice = document.querySelector("#forum-login-notice");
+	let user = null;
 
-	function renderPosts() {
-		const posts = readJson(POSTS_KEY, []);
+	function renderPosts(posts) {
 		list.replaceChildren();
 		if (posts.length === 0) {
 			const empty = document.createElement("p");
@@ -246,7 +237,7 @@ function initializeForum() {
 			list.append(empty);
 			return;
 		}
-		for (const post of [...posts].reverse()) {
+		for (const post of posts) {
 			const article = document.createElement("article");
 			article.className = "forum-post";
 			const title = document.createElement("h3");
@@ -255,32 +246,151 @@ function initializeForum() {
 			content.textContent = post.content;
 			const meta = document.createElement("p");
 			meta.className = "forum-post-meta";
-			meta.textContent = `${post.author} · ${post.date}`;
-			article.append(title, content, meta);
+			meta.textContent = `${post.author_name} · ${new Date(post.created_at).toLocaleDateString("fr-FR")}`;
+			const replies = [...(post.forum_replies || [])].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+			const threadToggle = document.createElement("button");
+			threadToggle.type = "button";
+			threadToggle.className = "forum-thread-toggle";
+			threadToggle.setAttribute("aria-expanded", "false");
+			threadToggle.textContent = `Ouvrir la discussion · ${replies.length} réponse${replies.length === 1 ? "" : "s"}`;
+
+			const thread = document.createElement("section");
+			thread.className = "forum-thread";
+			thread.hidden = true;
+			thread.setAttribute("aria-label", `Discussion : ${post.title}`);
+			const replyList = document.createElement("div");
+			replyList.className = "forum-replies";
+			if (replies.length === 0) {
+				const emptyReplies = document.createElement("p");
+				emptyReplies.className = "muted";
+				emptyReplies.textContent = "Pas encore de réponse. À toi de lancer l’échange !";
+				replyList.append(emptyReplies);
+			} else {
+				for (const reply of replies) {
+					const replyArticle = document.createElement("article");
+					replyArticle.className = "forum-reply";
+					const replyContent = document.createElement("p");
+					replyContent.textContent = reply.content;
+					const replyMeta = document.createElement("p");
+					replyMeta.className = "forum-post-meta";
+					replyMeta.textContent = `${reply.author_name} · ${new Date(reply.created_at).toLocaleDateString("fr-FR")}`;
+					replyArticle.append(replyContent, replyMeta);
+					replyList.append(replyArticle);
+				}
+			}
+			thread.append(replyList);
+
+			if (user) {
+				const replyForm = document.createElement("form");
+				replyForm.className = "forum-reply-form";
+				const replyLabel = document.createElement("label");
+				replyLabel.className = "form-field";
+				replyLabel.textContent = "Ta réponse";
+				const replyInput = document.createElement("textarea");
+				replyInput.name = "content";
+				replyInput.maxLength = 3000;
+				replyInput.required = true;
+				replyInput.placeholder = "Écris une réponse…";
+				replyLabel.append(replyInput);
+				const replySubmit = document.createElement("button");
+				replySubmit.type = "submit";
+				replySubmit.textContent = "Répondre";
+				const replyMessage = document.createElement("p");
+				replyMessage.className = "form-message";
+				replyMessage.setAttribute("role", "status");
+				replyForm.append(replyLabel, replySubmit, replyMessage);
+				replyForm.addEventListener("submit", async event => {
+					event.preventDefault();
+					try {
+						const replyContent = replyInput.value.trim();
+						if (!replyContent) throw new Error("Saisis une réponse avant de l’envoyer.");
+						const { error } = await supabaseClient.from("forum_replies").insert({
+							post_id: post.id,
+							author_id: user.id,
+							author_name: user.user_metadata?.display_name || user.email,
+							content: replyContent
+						});
+						if (error) throw error;
+						setMessage(replyMessage, "Ta réponse a été publiée.");
+						await loadPosts();
+					} catch (error) {
+						setMessage(replyMessage, error.message || "Impossible de publier ta réponse.", true);
+					}
+				});
+				thread.append(replyForm);
+			} else {
+				const replyHint = document.createElement("p");
+				replyHint.className = "muted";
+				replyHint.append("Connecte-toi pour répondre à cette discussion. ");
+				const loginLink = document.createElement("a");
+				loginLink.href = "account.html";
+				loginLink.textContent = "Accéder à mon compte →";
+				replyHint.append(loginLink);
+				thread.append(replyHint);
+			}
+
+			threadToggle.addEventListener("click", () => {
+				const isExpanded = threadToggle.getAttribute("aria-expanded") === "true";
+				threadToggle.setAttribute("aria-expanded", String(!isExpanded));
+				threadToggle.textContent = `${isExpanded ? "Ouvrir" : "Fermer"} la discussion · ${replies.length} réponse${replies.length === 1 ? "" : "s"}`;
+				thread.hidden = isExpanded;
+			});
+
+			article.append(title, content, meta, threadToggle, thread);
 			list.append(article);
 		}
 	}
 
-	form.addEventListener("submit", event => {
+	async function loadPosts() {
+		const { data, error } = await supabaseClient
+			.from("forum_posts")
+			.select("id, author_name, title, content, created_at, forum_replies(id, author_name, content, created_at)")
+			.order("created_at", { ascending: false });
+		if (error) throw error;
+		renderPosts(data);
+	}
+
+	form.addEventListener("submit", async event => {
 		event.preventDefault();
 		const message = document.querySelector("#forum-message");
 		const data = new FormData(form);
 		const title = String(data.get("title")).trim();
 		const content = String(data.get("content")).trim();
 		try {
-			if (!getSession()) throw new Error("Connecte-toi pour participer à la discussion.");
-			const posts = readJson(POSTS_KEY, []);
-			posts.push({ title, content, author: account.name, date: new Date().toLocaleDateString("fr-FR") });
-			writeJson(POSTS_KEY, posts);
+			if (!user) throw new Error("Connecte-toi pour participer à la discussion.");
+			const { error } = await supabaseClient.from("forum_posts").insert({
+				author_id: user.id,
+				author_name: user.user_metadata?.display_name || user.email,
+				title,
+				content
+			});
+			if (error) throw error;
 			form.reset();
-			setMessage(message, "Ton sujet a été publié sur ce navigateur.");
-			renderPosts();
+			setMessage(message, "Ton sujet a été publié et est visible par tous.");
+			await loadPosts();
 		} catch (error) {
-			setMessage(message, error.message, true);
+			setMessage(message, error.message || "Impossible de publier le sujet.", true);
 		}
 	});
 
-	renderPosts();
+	if (!supabaseClient) {
+		setMessage(status, "Le forum partagé nécessite une configuration Supabase valide.", true);
+		form.hidden = true;
+		return;
+	}
+
+	supabaseClient.auth.getSession().then(async ({ data, error }) => {
+		if (error) throw error;
+		user = data.session?.user || null;
+		accountNotice.hidden = Boolean(user);
+		form.hidden = !user;
+		if (user) {
+			document.querySelector("#forum-author").textContent = `Connecté·e en tant que ${user.user_metadata?.display_name || user.email}`;
+		}
+		await loadPosts();
+	}).catch(error => {
+		setMessage(status, error.message || "Impossible de charger les discussions.", true);
+	});
 }
 
 initializeAccountPage();
