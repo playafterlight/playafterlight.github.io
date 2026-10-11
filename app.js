@@ -1,6 +1,18 @@
 const ACCOUNT_KEY = "afterlight.demo.account";
 const SESSION_KEY = "afterlight.demo.session";
 const POSTS_KEY = "afterlight.demo.posts";
+const supabaseConfig = globalThis.AFTERLIGHT_SUPABASE_CONFIG;
+const supabaseUrlIsValid = (() => {
+	try {
+		const url = new URL(supabaseConfig?.url);
+		return url.protocol === "https:" && url.hostname.endsWith(".supabase.co");
+	} catch {
+		return false;
+	}
+})();
+const supabaseClient = globalThis.supabase && supabaseUrlIsValid && supabaseConfig?.publicKey
+	? globalThis.supabase.createClient(supabaseConfig.url, supabaseConfig.publicKey)
+	: null;
 
 function readJson(key, fallback) {
 	try {
@@ -27,15 +39,6 @@ function setMessage(element, message, isError = false) {
 	element.dataset.error = String(isError);
 }
 
-async function hashPassword(password, email) {
-	if (!globalThis.crypto?.subtle) {
-		throw new Error("Le chiffrement du navigateur est indisponible. Ouvre le site en HTTPS pour utiliser cette démo.");
-	}
-	const bytes = new TextEncoder().encode(`${email}:${password}`);
-	const digest = await crypto.subtle.digest("SHA-256", bytes);
-	return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
-}
-
 function getAccount() {
 	return readJson(ACCOUNT_KEY, null);
 }
@@ -55,7 +58,6 @@ function initializeAccountPage() {
 	const loginForm = document.querySelector("#login-form");
 	const tabs = document.querySelectorAll("[data-account-tab]");
 	const forms = { signup: signupForm, login: loginForm };
-	const currentAccount = getSession();
 
 	function showForm(name) {
 		for (const [formName, form] of Object.entries(forms)) {
@@ -67,13 +69,26 @@ function initializeAccountPage() {
 		setMessage(message, "");
 	}
 
-	function renderState() {
-		const account = getSession();
-		if (!account) {
-			state.innerHTML = "<h2>Aucun compte connecté</h2><p class=\"muted\">Crée un profil de démonstration ou connecte-toi sur ce navigateur.</p>";
+	function cacheUserForDemoForum(user) {
+		const account = { name: user.user_metadata?.display_name || user.email, email: user.email };
+		writeJson(ACCOUNT_KEY, account);
+		writeJson(SESSION_KEY, account.email);
+		return account;
+	}
+
+	function clearDemoForumSession() {
+		localStorage.removeItem(ACCOUNT_KEY);
+		localStorage.removeItem(SESSION_KEY);
+	}
+
+	function renderState(user) {
+		if (!user) {
+			state.innerHTML = "<h2>Aucun compte connecté</h2><p class=\"muted\">Crée un profil ou connecte-toi avec Supabase.</p>";
 			for (const tab of tabs) tab.hidden = false;
+			showForm("signup");
 			return;
 		}
+		const account = cacheUserForDemoForum(user);
 		state.replaceChildren();
 		const heading = document.createElement("h2");
 		heading.textContent = `Bienvenue, ${account.name}`;
@@ -95,27 +110,33 @@ function initializeAccountPage() {
 		save.type = "submit";
 		save.textContent = "Enregistrer le nom";
 		profileForm.append(label, save);
-		profileForm.addEventListener("submit", event => {
+		profileForm.addEventListener("submit", async event => {
 			event.preventDefault();
 			try {
-				const updatedAccount = getAccount();
-				if (!updatedAccount) throw new Error("Profil AFTERLIGHT introuvable sur ce navigateur.");
-				updatedAccount.name = input.value.trim();
-				writeJson(ACCOUNT_KEY, updatedAccount);
-				renderState();
+				const name = input.value.trim();
+				if (!name) throw new Error("Saisis un nom affiché.");
+				const { data, error } = await supabaseClient.auth.updateUser({ data: { display_name: name } });
+				if (error) throw error;
+				renderState(data.user);
 				setMessage(message, "Ton nom affiché a été mis à jour.");
 			} catch (error) {
-				setMessage(message, error.message, true);
+				setMessage(message, error.message || "Impossible de mettre à jour ton profil.", true);
 			}
 		});
 		const logout = document.createElement("button");
 		logout.type = "button";
 		logout.textContent = "Se déconnecter";
-		logout.addEventListener("click", () => {
-			localStorage.removeItem(SESSION_KEY);
-			renderState();
-			showForm("login");
-			setMessage(message, "Tu es déconnecté.");
+		logout.addEventListener("click", async () => {
+			try {
+				const { error } = await supabaseClient.auth.signOut();
+				if (error) throw error;
+				clearDemoForumSession();
+				renderState(null);
+				showForm("login");
+				setMessage(message, "Tu es déconnecté.");
+			} catch (error) {
+				setMessage(message, error.message || "Impossible de te déconnecter.", true);
+			}
 		});
 		state.append(heading, details, profileForm, logout);
 		for (const tab of tabs) tab.hidden = true;
@@ -125,6 +146,22 @@ function initializeAccountPage() {
 
 	for (const tab of tabs) tab.addEventListener("click", () => showForm(tab.dataset.accountTab));
 
+	if (!globalThis.supabase) {
+		state.innerHTML = "<h2>Supabase inaccessible</h2><p class=\"muted\">La bibliothèque Supabase n'a pas pu être chargée. Vérifie ta connexion, puis recharge la page.</p>";
+		for (const form of Object.values(forms)) form.hidden = true;
+		for (const tab of tabs) tab.hidden = true;
+		setMessage(message, "Impossible de charger Supabase Auth.", true);
+		return;
+	}
+
+	if (!supabaseClient) {
+		state.innerHTML = "<h2>Configuration Supabase à corriger</h2><p class=\"muted\">Dans supabase-config.js, mets l'URL API affichée dans les paramètres de ton projet Supabase (elle ressemble à https://abcdefghijkl.supabase.co) dans url. L'adresse playafterlight.github.io est celle du site, pas celle de l'API. Garde la clé publique publishable/anon dans publicKey.</p>";
+		for (const form of Object.values(forms)) form.hidden = true;
+		for (const tab of tabs) tab.hidden = true;
+		setMessage(message, "Aucun mot de passe n'est enregistré : l'URL ou la clé publique Supabase manque ou est invalide.", true);
+		return;
+	}
+
 	signupForm.addEventListener("submit", async event => {
 		event.preventDefault();
 		const data = new FormData(signupForm);
@@ -132,15 +169,25 @@ function initializeAccountPage() {
 		const email = String(data.get("email")).trim().toLowerCase();
 		const password = String(data.get("password"));
 		try {
-			if (getAccount()) throw new Error("Un profil existe déjà dans ce navigateur. Connecte-toi ou efface les données locales du site pour en créer un autre.");
-			const passwordHash = await hashPassword(password, email);
-			writeJson(ACCOUNT_KEY, { name, email, passwordHash });
-			writeJson(SESSION_KEY, email);
+			if (!name) throw new Error("Saisis un nom affiché.");
+			const { data: result, error } = await supabaseClient.auth.signUp({
+				email,
+				password,
+				options: {
+					data: { display_name: name },
+					emailRedirectTo: window.location.href.split("#")[0]
+				}
+			});
+			if (error) throw error;
 			signupForm.reset();
-			renderState();
-			setMessage(message, "Profil de démonstration créé. Bienvenue sur Afterlight !");
+			if (result.session) {
+				renderState(result.user);
+				setMessage(message, "Compte AFTERLIGHT créé. Bienvenue !");
+			} else {
+				setMessage(message, "Compte créé. Vérifie ta boîte e-mail pour confirmer ton adresse.");
+			}
 		} catch (error) {
-			setMessage(message, error.message, true);
+			setMessage(message, error.message || "Impossible de créer le compte.", true);
 		}
 	});
 
@@ -150,22 +197,27 @@ function initializeAccountPage() {
 		const email = String(data.get("email")).trim().toLowerCase();
 		const password = String(data.get("password"));
 		try {
-			const account = getAccount();
-			const passwordHash = await hashPassword(password, email);
-			if (!account || account.email !== email || account.passwordHash !== passwordHash) {
-				throw new Error("Adresse e-mail ou mot de passe incorrect.");
-			}
-			writeJson(SESSION_KEY, email);
+			const { data: result, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+			if (error) throw error;
 			loginForm.reset();
-			renderState();
+			renderState(result.user);
 			setMessage(message, "Tu es connecté.");
 		} catch (error) {
-			setMessage(message, error.message, true);
+			setMessage(message, error.message || "Impossible de te connecter.", true);
 		}
 	});
 
-	renderState();
-	if (!currentAccount) showForm("signup");
+	supabaseClient.auth.getSession().then(({ data, error }) => {
+		if (error) throw error;
+		if (data.session) {
+			renderState(data.session.user);
+		} else {
+			clearDemoForumSession();
+			renderState(null);
+		}
+	}).catch(error => {
+		setMessage(message, error.message || "Impossible de vérifier la session Supabase.", true);
+	});
 }
 
 function initializeForum() {

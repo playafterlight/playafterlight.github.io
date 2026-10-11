@@ -4,12 +4,14 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="theme-color" content="#101211">
-	<meta name="description" content="Crée, connecte-toi et gère ton compte AFTERLIGHT. Démonstration locale au navigateur.">
+	<meta name="description" content="Crée, connecte-toi et gère ton compte AFTERLIGHT avec Supabase Auth.">
 	<title>Compte AFTERLIGHT — Afterlight</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Italiana&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="pages.css">
+	<script src="supabase-config.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 	<script src="app.js" defer></script>
 </head>
 <body>
@@ -23,8 +25,8 @@
 	<main class="page-main" id="contenu">
 		<p class="eyebrow">Espace AFTERLIGHT</p>
 		<h1>Ton compte,<br>ton passage.</h1>
-		<p class="lede">Crée ton profil, connecte-toi et retrouve les discussions du forum.</p>
-		<div class="notice"><strong>Prototype local, pas un vrai service de compte :</strong> les données restent dans ce navigateur et ne sont pas synchronisées. N'utilise pas un mot de passe important ou réutilisé. Il n'existe actuellement ni serveur de compte ni récupération de mot de passe.</div>
+		<p class="lede">Crée ton profil Afterlight et connecte-toi depuis tes appareils.</p>
+		<div class="notice"><strong>Authentification Supabase :</strong> les mots de passe sont gérés par Supabase Auth, jamais enregistrés par ce site. Le forum reste une démonstration locale et ses discussions ne sont pas partagées entre visiteurs.</div>
 		<section id="account-state" class="account-state" aria-live="polite"></section>
 		<div class="account-tabs" aria-label="Actions du compte">
 			<button type="button" data-account-tab="signup" aria-pressed="true">Créer un compte</button>
@@ -33,7 +35,7 @@
 		<div class="form-layout">
 			<form id="signup-form" class="form-panel account-form">
 				<h2>Créer un profil</h2>
-				<p>Une démo pour tester le parcours du compte AFTERLIGHT.</p>
+				<p>Ton mot de passe est transmis à Supabase Auth via HTTPS.</p>
 				<label class="form-field">Nom affiché<input name="name" maxlength="32" autocomplete="nickname" required></label>
 				<label class="form-field">Adresse e-mail<input name="email" type="email" autocomplete="email" required></label>
 				<label class="form-field">Mot de passe<input name="password" type="password" minlength="8" autocomplete="new-password" required></label>
@@ -41,7 +43,7 @@
 			</form>
 			<form id="login-form" class="form-panel account-form" hidden>
 				<h2>Se connecter</h2>
-				<p>Utilise les identifiants enregistrés sur ce navigateur.</p>
+				<p>Utilise l'adresse e-mail et le mot de passe de ton compte AFTERLIGHT.</p>
 				<label class="form-field">Adresse e-mail<input name="email" type="email" autocomplete="email" required></label>
 				<label class="form-field">Mot de passe<input name="password" type="password" autocomplete="current-password" required></label>
 				<button type="submit">Se connecter</button>
@@ -55,6 +57,6 @@
 		</div>
 		<p id="account-message" class="form-message" role="status" aria-live="polite"></p>
 	</main>
-	<footer class="page-footer"><span>Compte AFTERLIGHT · Version de démonstration</span><a href="forum.html">Rejoindre le forum →</a></footer>
+	<footer class="page-footer"><span>Compte AFTERLIGHT · Authentification Supabase</span><a href="forum.html">Rejoindre le forum →</a></footer>
 </body>
 </html>

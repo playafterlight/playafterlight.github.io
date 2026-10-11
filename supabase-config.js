@@ -1,0 +1,4 @@
+window.AFTERLIGHT_SUPABASE_CONFIG = {
+	url: "https://hvqlxujfdqmycvscxuuu.supabase.co",
+	publicKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2cWx4dWpmZHFteWN2c2N4dXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MjY1NzAsImV4cCI6MjEwNzMwMjU3MH0.NeK_tVD7-rXdPMJnkzyTizNkAibt4SoumozdHShUVVE"
+};
