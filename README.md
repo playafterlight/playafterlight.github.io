@@ -1,4 +1,4 @@
-# afterlight.github.io
+# playafterlight.github.io
 Site officiel du jeu vidéo AFTERLIGHT.
 
 ## Pages
